@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Automatas</title>
+    <style>
+        canvas{
+            border:solid
+        }
+        .cont{
+            display: flex;
+        }
+        table,th,td{
+            border: solid 1px;
+        }
+        .void{
+            background-color: gray;
+        }
+    </style>
+</head>
+<body>
+    <div class="opc">
+        <b>λ</b>: /l <br>
+        <b>ϵ</b> : /e <br>
+        <b>backspace</b>:Eliminar <br>
+        <b>ctrl</b>:Mantén presionado y arrastra para crear saltos <br>
+        <b>shift</b>:Presiona para establecer Estado inicial <br>
+        <b>F</b>:Presiona para establecer estado final <br>
+        Estado inicial: <b><span class="estadoI">no definido</span> </b>  <br>
+        Estados final: <b><span class="estadoF">[]</span></b>
+        <button onclick="save()">Save</button>
+        <button onclick="load()">load</button>
+    </div>
+    <div class="cont">
+        <canvas></canvas>
+    <div class="matriz">
+        <table>
+        </table>
+    </div>
+    </div>
+    <script src="https://raw.githack.com/OrozcoOscar/Dolar/main/$.js"></script>
+    <script src="main.js"></script>
+    <script src="loadGrafo.js"></script>
+</body>
+</html>
