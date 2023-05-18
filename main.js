@@ -159,7 +159,7 @@ function createMatrizDelta() {
 
     })
 
-    grupoEstados.map(e => {
+    grupoEstados.forEach(e => {
         if (e.isFin) {
             if (F.length == 0) {
                 F.push(e)
