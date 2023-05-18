@@ -349,116 +349,169 @@ class Salto{
     load(obj){
         Object.assign(this, obj)
     }
-    paint(){
-        let x=this.estadoI.x;
-        let y=this.estadoI.y;
-        if(this.estadoF!=undefined){
-            if(this.estadoF.id==this.estadoI.id){
-                this.xf=this.estadoF.x+2
-                this.yf=this.estadoF.y+2
-            }else{
-                this.xf=this.estadoF.x
-                this.yf=this.estadoF.y
-            }
+    
+        paint() {
+        const x = this.estadoI.x;
+        const y = this.estadoI.y;
+        const xf = this.estadoF ? this.estadoF.x : x;
+        const yf = this.estadoF ? this.estadoF.y : y;
+        const cx = (x + xf) / 2 + 1;
+        const cy = (y + yf) / 2 + 1;
+    
+        canvas.circle(cx, cy, 5, this.select ? "blue" : "black", true);
+        canvas.line(x, y, xf, yf, 2, this.select ? "blue" : "black");
+    
+        const [c, d, e] = solveEquations([
+            [x, y, 1],
+            [xf, yf, 1],
+            [cx, cy, 1]
+        ], [
+            -Math.pow(x, 2) - Math.pow(y, 2),
+            -Math.pow(xf, 2) - Math.pow(yf, 2),
+            -Math.pow(cx, 2) - Math.pow(cy, 2)
+        ]);
+    
+        const h = -c / 2;
+        const k = -d / 2;
+        const r = Math.sqrt(-e + Math.pow(h, 2) + Math.pow(k, 2));
+    
+        const a1 = Math.atan2(y - k, x - h);
+        const a2 = Math.atan2(yf - k, xf - h);
+        const m = (y - yf) / (x - xf);
+        const fy = (cx - x) * m + y;
+        const [p1, p2] = intersectionCircles(h, k, r, xf, yf, 20);
+        const [xi, yi] = (x < xf && fy < cy) || (x >= xf && fy >= cy) ? [p1.x, p1.y] : [p2.x, p2.y];
+    
+        const angf = Math.atan((yf - yi) / (xf - xi + 0.1));
+        const triangleSize = 10; // Tamaño del triángulo
+    
+        const triangleX = xf - triangleSize * Math.cos(angf);
+        const triangleY = yf - triangleSize * Math.sin(angf);
+        const angleTriangle = Math.PI / 6; // Ángulo del triángulo (30 grados)
+        const triangleX2 = triangleX + triangleSize * Math.cos(angf + angleTriangle);
+        const triangleY2 = triangleY + triangleSize * Math.sin(angf + angleTriangle);
+    
+        canvas.polygon(xi, yi, 3, 10, triangleX2, triangleY2, true);
+    
+        const angleOffset = (xf - x >= 0) ? 0 : Math.PI;
+        const textX = cx + 10 + 9 * Math.cos(angf + angleOffset);
+        const textY = cy - 10 + 9 * Math.sin(angf + angleOffset);
+    
+        const value = (this.value == "/l") ? "λ" : (this.value == "/e") ? "ϵ" : this.value;
+        canvas.text(value, textX, textY, 12, this.select ? "blue" : "black");
+    }
+    
+    
+//     paint(){
+//         let x=this.estadoI.x;
+//         let y=this.estadoI.y;
+//         if(this.estadoF!=undefined){
+//             if(this.estadoF.id==this.estadoI.id){
+//                 this.xf=this.estadoF.x+2
+//                 this.yf=this.estadoF.y+2
+//             }else{
+//                 this.xf=this.estadoF.x
+//                 this.yf=this.estadoF.y
+//             }
             
-        }
-        let xf=this.xf;
-        let yf=this.yf;
-        if(this.estadoF == undefined || (this.cx== undefined || this.cy== undefined)){
-            this.cx=(x+(xf-x)/2)+1;
-            this.cy=(y+(yf-y)/2)+1;
-        }
+//         }
+//         let xf=this.xf;
+//         let yf=this.yf;
+//         if(this.estadoF == undefined || (this.cx== undefined || this.cy== undefined)){
+//             this.cx=(x+(xf-x)/2)+1;
+//             this.cy=(y+(yf-y)/2)+1;
+//         }
            
         
         
-        let cx=this.cx;
-        let cy=this.cy;
+//         let cx=this.cx;
+//         let cy=this.cy;
 
         
-        let pintarArc=()=>{
+//         let pintarArc=()=>{
 
-            canvas.circle(cx,cy,5,this.select?"blue":"black",true)
-            let resultadoE=solveEquations([
-                        [x,y,1],
-                        [xf,yf,1],
-                        [cx,cy,1]
-                        ],
-                        [-Math.pow(x,2)-Math.pow(y,2),
-                        -Math.pow(xf,2)-Math.pow(yf,2),
-                        -Math.pow(cx,2)-Math.pow(cy,2)])
+//             canvas.circle(cx,cy,5,this.select?"blue":"black",true)
+//             let resultadoE=solveEquations([
+//                         [x,y,1],
+//                         [xf,yf,1],
+//                         [cx,cy,1]
+//                         ],
+//                         [-Math.pow(x,2)-Math.pow(y,2),
+//                         -Math.pow(xf,2)-Math.pow(yf,2),
+//                         -Math.pow(cx,2)-Math.pow(cy,2)])
 
-            let [c,d,e]=resultadoE
-            let h=-c/2
-            let k=-d/2
-            let r=Math.sqrt(-e+Math.pow(h,2)+Math.pow(k,2))
+//             let [c,d,e]=resultadoE
+//             let h=-c/2
+//             let k=-d/2
+//             let r=Math.sqrt(-e+Math.pow(h,2)+Math.pow(k,2))
             
             
-            let calcularAnguloCuadrante=(x,y)=>{
-                let a=Math.atan((y-k)/(x-h))
-                if((x<=h && y<=k) || (x<h&& y>=k)){
-                    a=Math.PI+a
-                }else if(y<k){
-                    a=2*Math.PI+a
-                }
-                return a
-            }
-            let a1=calcularAnguloCuadrante(x,y)
-            let a2=calcularAnguloCuadrante(xf,yf)
+//             let calcularAnguloCuadrante=(x,y)=>{
+//                 let a=Math.atan((y-k)/(x-h))
+//                 if((x<=h && y<=k) || (x<h&& y>=k)){
+//                     a=Math.PI+a
+//                 }else if(y<k){
+//                     a=2*Math.PI+a
+//                 }
+//                 return a
+//             }
+//             let a1=calcularAnguloCuadrante(x,y)
+//             let a2=calcularAnguloCuadrante(xf,yf)
 
-            let m= (y-yf)/(x-xf)
-            let fy= (cx-x)*m+y;
+//             let m= (y-yf)/(x-xf)
+//             let fy= (cx-x)*m+y;
 
 
-            let [p1,p2]=intersectionCircles(h,k,r,xf,yf,20)
-            let xi,yi
+//             let [p1,p2]=intersectionCircles(h,k,r,xf,yf,20)
+//             let xi,yi
 
-            if(x<xf){// 1 4
-                if(fy<cy){ //  4
-                    canvas.arc(h,k,r,a1,a2,this.select?"blue":"black");
-                    [xi,yi]=[p1.x,p1.y]
-                }else{ // 1
-                   canvas.arc(h,k,r,a2,a1,this.select?"blue":"black");
-                   [xi,yi]=[p2.x,p2.y]
-                }
-            }else{// 2 3
-                if(fy>cy){//2
-                    canvas.arc(h,k,r,a1,a2,this.select?"blue":"black");
-                    [xi,yi]=[p1.x,p1.y]
-                }else{//3
-                   canvas.arc(h,k,r,a2,a1,this.select?"blue":"black");
-                   [xi,yi]=[p2.x,p2.y]
-                }
+//             if(x<xf){// 1 4
+//                 if(fy<cy){ //  4
+//                     canvas.arc(h,k,r,a1,a2,this.select?"blue":"black");
+//                     [xi,yi]=[p1.x,p1.y]
+//                 }else{ // 1
+//                    canvas.arc(h,k,r,a2,a1,this.select?"blue":"black");
+//                    [xi,yi]=[p2.x,p2.y]
+//                 }
+//             }else{// 2 3
+//                 if(fy>cy){//2
+//                     canvas.arc(h,k,r,a1,a2,this.select?"blue":"black");
+//                     [xi,yi]=[p1.x,p1.y]
+//                 }else{//3
+//                    canvas.arc(h,k,r,a2,a1,this.select?"blue":"black");
+//                    [xi,yi]=[p2.x,p2.y]
+//                 }
                 
-            }
+//             }
 
                 
-            let angf=Math.atan((yf-yi)/((xf-xi)+0.1))
-            if(xi>=xf){
-                xi=xi+9*Math.cos(angf)
-                yi=yi+9*Math.sin(angf)
-            }else{
-                xi=xi-9*Math.cos(angf)
-                yi=yi-9*Math.sin(angf)
-            }
-            canvas.polygon(xi,yi,3,10,(xf-xi>0)?toGrad(angf):toGrad(angf)+180,true)
+//             let angf=Math.atan((yf-yi)/((xf-xi)+0.1))
+//             if(xi>=xf){
+//                 xi=xi+9*Math.cos(angf)
+//                 yi=yi+9*Math.sin(angf)
+//             }else{
+//                 xi=xi-9*Math.cos(angf)
+//                 yi=yi-9*Math.sin(angf)
+//             }
+//             canvas.polygon(xi,yi,3,10,(xf-xi>0)?toGrad(angf):toGrad(angf)+180,true)
 
-            if(!this.estadoF){
-                canvas.line(x,y,xf,yf,2,this.select?"blue":"black")
-            }
-            let aux=Math.atan(m)
-            if(aux>0.5)aux=-20
-            canvas.text(this.value=="/l"?"λ":this.value=="/e"?"ϵ":this.value,cx+10+aux,
-                    cy-10+aux,12,this.select?"blue":"black")
+//             if(!this.estadoF){
+//                 canvas.line(x,y,xf,yf,2,this.select?"blue":"black")
+//             }
+//             let aux=Math.atan(m)
+//             if(aux>0.5)aux=-20
+//             canvas.text(this.value=="/l"?"λ":this.value=="/e"?"ϵ":this.value,cx+10+aux,
+//                     cy-10+aux,12,this.select?"blue":"black")
 
 
             
-        }
+//         }
       
-    /**-------------------------------------------------- */
+//     /**-------------------------------------------------- */
     
-    pintarArc();
+//     pintarArc();
 
-    }
+//     }
 }
 
 
