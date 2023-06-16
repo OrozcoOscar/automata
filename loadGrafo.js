@@ -1,5 +1,5 @@
-function load() {
-    fetch("./grafo.json").then(e => e.json()).then(g => {
+
+function load(g){
         console.log("ok", g)
         grupoEstados = []
         grupoSaltos = []
@@ -42,5 +42,20 @@ function load() {
         createMatrizDelta()
         paint()
 
-    }).catch(console.error)
+
 }
+const fileInput = document.getElementById('fileInput');
+
+fileInput.addEventListener('change', (event) => {
+  const file = event.target.files[0];
+  const reader = new FileReader();
+
+  reader.onload = (e) => {
+    const contenidoArchivo = e.target.result;
+    const data = JSON.parse(contenidoArchivo);
+    load(data)
+    console.log(data);
+  };
+
+  reader.readAsText(file);
+});
