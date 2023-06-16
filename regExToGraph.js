@@ -78,6 +78,7 @@ function get() {
     console.log(arbol,grupoSaltos)
     paint()
     createMatrizDelta()
+
 }
 //\([^()]*\) encuentra los parentesis mas internos
 function split(cad) {

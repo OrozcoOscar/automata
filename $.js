@@ -125,6 +125,49 @@ function $(argument) {
 	else return undefined
 }
 /**
+ * Limita la frecuencia de ejecución de una función.
+ * @param {Function} callback - Función a ejecutar.
+ * @param {number} delay - Retraso en milisegundos.
+ * @returns {Function} - Función envuelta que aplica el throttle.
+ */
+function throttle(callback, delay) {
+  let lastExecution = 0;
+  let timeoutId;
+
+  return function (...args) {
+    const now = Date.now();
+
+    if (now - lastExecution < delay) {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        lastExecution = now;
+        callback.apply(this, args);
+      }, delay);
+    } else {
+      lastExecution = now;
+      callback.apply(this, args);
+    }
+  };
+}
+
+/**
+ * Retrasa la ejecución de una función después del último evento.
+ * @param {Function} callback - Función a ejecutar.
+ * @param {number} delay - Retraso en milisegundos.
+ * @returns {Function} - Función envuelta que aplica el debounce.
+ */
+function debounce(callback, delay) {
+  let timeoutId;
+
+  return function (...args) {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => {
+      callback.apply(this, args);
+    }, delay);
+  };
+}
+
+/**
      * Calcula la Distancia entre dos puntos 
      * @param p1 primer punto.
      * @param p2  segundo punto.
@@ -309,30 +352,31 @@ function moveTo(obj,x,y,type="relative") {
 	 * @param tag String -> etiqueta css del contenedor de la salida(.cont,#cont)
 */
 class GESTOR{
-	constructor(tag=""){
-		this.fin=0//Fin del ciclo
-		this.aps=0//Actualizaciones por segundo
-		this.fps=0//Frames por segundo
-		this.tag=tag	
-	}
-    start(tiempo){
-        this.aps++;
-        this.fps++;
-        var diferencia=tiempo-this.fin;
-        if( diferencia > 999 ){
-            if(this.tag!=""){
-                document.querySelector(this.tag).innerHTML=(`
-                tiempo:${tiempo}<br>
-                aps:${this.aps}<br>
-                fps:${this.fps}<br>
-                `);
-            }
-            this.fin=tiempo;
-            this.fps=0;
-            this.aps=0;
-        }
+constructor(tag = "") {
+  this.fin = 0; // Fin del ciclo
+  this.aps = 0; // Actualizaciones por segundo
+  this.fps = 0; // Frames por segundo
+  this.outputElement = document.querySelector(tag);
+}
+
+start = (tiempo) => {
+  this.aps++;
+  this.fps++;
+  var diferencia = tiempo - this.fin;
+  if (diferencia > 999) {
+    if (this.outputElement) {
+      this.outputElement.innerHTML = `
+        Tiempo: ${tiempo}<br>
+        APS: ${this.aps}<br>
+        FPS: ${this.fps}<br>
+      `;
     }
-   
+    this.fin = tiempo;
+    this.fps = 0;
+    this.aps = 0;
+  }
+};
+
 }
 /**
      * Prepara un Canvas 
@@ -621,7 +665,9 @@ class Canvas{
 	img(img,x,y,w,h,cutX=0,cutY=0,cutW=null,cutH=null,espX=1,espY=1){
 		(!cutW)?cutW=img.width:false;
 		(!cutH)?cutH=img.height:false;
-
+		(!w)?w=img.width:false;
+		(!h)?h=img.height:false;
+		
 		let ax = 0, ay = 0;
 		if(espX==-1) ax= -w;
 		if(espY==-1) ay= -h;
@@ -650,6 +696,28 @@ class Canvas{
              	   y: (evt.clientY - ClientRect.top) * scaleY 
            	 }
 	}
+	/**
+	 * Obtiene la posición del mouse incluso si el canvas se re-dimensiona
+	 * @param {number} centerX centro del gradiente en x
+	 * @param {number} centerY centro del gradiente en y
+	 * @param {number} innerRadius radio interno
+	 * @param {number} outerRadius radio externo
+	 * @param {Array} colorStops { offset, color } offset:(el desplazamiento del color, normalizado entre 0 y 1)  ej[
+            { offset: 0, color: "red" },
+            { offset: 1, color: "#000" }
+          ]
+	 * @returns "obj" un canvasGradiente
+	 */
+	createRadialGradient(centerX=0, centerY=0, innerRadius=0, outerRadius=0, colorStops=[]){
+		const gradient = this.ctx.createRadialGradient(centerX, centerY, innerRadius, centerX, centerY, outerRadius);
+		
+		for (let i = 0; i < colorStops.length; i++) {
+		  const { offset, color } = colorStops[i];
+		  gradient.addColorStop(offset, color);
+		}
+		
+		return gradient;
+	  }
 }
 /**
  * calcula la intersección de dos circunferencias y retorna un vector de dos puntos

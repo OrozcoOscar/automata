@@ -4,6 +4,7 @@ canvas.size(700, 500)
 let S = null //Estado inicial definido
 let F = []
 let delta = []
+let delta_prima= []
 let valoresSaltos = []
 //--------------------------------
 let grupoEstados = []
@@ -14,18 +15,21 @@ let SELECT_MOVE = null
 let SELECT = null
 let CTRL = false
 let SALTO = null
+let canvas_focus=true
 let initEvent = true //estado para saber si ya se presiono la tecla
 // eventos
 canvas.event("dblclick", createEstado)
 /* MOVER */
-canvas.event("mousedown", seleccionar)
-canvas.event("mousemove", mover)
-canvas.event("mouseup", () => {
+canvas.event("mousedown", throttle(seleccionar, 100))
+canvas.event("mousemove", throttle(mover, 100)); // Limita el controlador 'mover' a ejecutarse como máximo cada 100ms
+canvas.event("mouseup", (e) => {
     if (!CTRL) SELECT_MOVE = null
+    canvas_focus=true
+    console.log(canvas_focus)
 })
 /* FIN MOVER */
-window.addEventListener("keydown", initSalto)
-window.addEventListener("keyup", (e) => {
+window.addEventListener("keydown", throttle(initSalto, 100))
+window.addEventListener("keyup",(e) => {
     if (SELECT) {
         CTRL = false
         initEvent = true
@@ -47,7 +51,7 @@ window.addEventListener("keyup", (e) => {
     }
 })
 // funciones
-
+function setFocus(){canvas_focus=false}
 function initSalto(e) {
 
     if ((e.key == "Control") && initEvent) {
@@ -90,29 +94,30 @@ function initSalto(e) {
             document.querySelector(".estadoF").innerHTML = `[${F.map(e => "q" + e.id).toString()
                 }]`
         }
-    } else if (e.key == "Backspace") {
-        // if(confirm("¿Desea eliminar este elemento?")){
-        //     if(SELECT instanceof Estado){
-        //         let po=grupoEstados.findIndex(e=>e.id==SELECT.id)
-        //         grupoEstados.splice(po,1)
-        //     }else if(SELECT instanceof Salto){
-        //         let po=grupoSaltos.findIndex(e=>e.id==SELECT.id)
-        //         grupoSaltos.splice(po,1)
+    } else if ( SELECT  && e.key == "Backspace" && canvas_focus) {
+        if(confirm("¿Desea eliminar este elemento?")){
+            if(SELECT instanceof Estado){
+                let po=grupoEstados.findIndex(e=>e.id==SELECT.id)
+                grupoEstados.splice(po,1)
+            }else if(SELECT instanceof Salto){
+                let po=grupoSaltos.findIndex(e=>e.id==SELECT.id)
+                grupoSaltos.splice(po,1)
 
-        //     }
+            }
 
-        // }
+        }
     }
     paint()
 }
 function createSalto(e) {
-
+    
     let { x, y } = canvas.getMousePosition(e)
     if (!SALTO) {
         if (SELECT instanceof Estado) {
-            SALTO = new Salto(SELECT, x, y, idSaltos, "");
+            SALTO = new Salto(SELECT,null, x, y, idSaltos, "");
         }
     } else {
+        console.log("salto")
         SALTO.xf = x
         SALTO.yf = y
         paint()
@@ -137,6 +142,33 @@ async function resetSelect() {
     grupoSaltos.forEach(e => e.select = false);
     grupoEstados.forEach(e => e.select = false);
     paint()
+}
+function createMatrizDeltaPrima(){
+    let lambdas=delta.map(e=>{
+        return {
+            estI:e.estadoI,
+            estadosF:[e.estadoI,(e.value=="/l")?e.estadoF:undefined].filter(Boolean)
+        }
+    })
+    console.log(lambdas.map(l=>`λ(q${l.estI.id})={${l.estadosF.map(f=>`q${f.id}`)}}`))
+    lambdas.forEach(l=>{
+        let estado=delta.filter(d=>d.estadoI.id==l.estI.id)
+        console.log(estado)
+
+        // l.estadosF.forEach(e=>{
+        //     let res_delta = delta.filter(d=>e.id==d.estadoI.id && d.value!= "/l")
+        //     res_delta.forEach(rd=>{
+        //         delta_prima.push({
+        //             estadoI:rd.estadoF?.id,
+        //             estadosF:lambdas.filter(e=>e.estI.id==rd.estadoF?.id),
+        //             value:rd.value
+        //         })
+        //     })
+            
+            
+        // })
+    })
+    console.log(delta_prima.map(d=>`(q${d.estadoI},${d.value})=[${d.estadosF.map(f=>`q${f.estI.id}`)}]`))
 }
 function createMatrizDelta() {
     /// -------- limpia residuos -----
@@ -199,6 +231,17 @@ function createMatrizDelta() {
           }
         });
       });
+      grupoEstados.forEach(e => {
+        let r=delta.find(d =>e.id==d.estadoI.id)
+          if (!r) {
+            delta.push({
+              estadoI: e,
+              estadoF: null,
+              value: null
+            });
+          }
+      });
+
       
     pintarMatriz()
 }
@@ -206,7 +249,7 @@ function pintarMatriz() {
     document.querySelector("table").innerHTML = ""
     document.querySelector("table").innerHTML += `<tr><th>Δ</th>${valoresSaltos.map(e => `<th>${e}</th>`).toString().replace(/,/g, "")
         }</tr>`
-    delta.reverse()
+    // delta.reverse()
     delta.forEach(e => {
         let r = `<td >q${e.estadoI.id}</td>` + valoresSaltos.map(v => {
             if (e.value == v) {
@@ -217,22 +260,23 @@ function pintarMatriz() {
         }).toString().replace(/,/g, "")
         document.querySelector("table").innerHTML += `<tr>${r}</tr>`
     })
-    delta.reverse()
+    // delta.reverse()
 }
 function paint() {
     canvas.clear()
+
     canvas.ctx.lineWidth = 1
     if (grupoEstados.length == 0) idEstados = 0
     grupoSaltos.forEach(e => e.paint());
     grupoEstados.forEach(e => e.paint());
 
-    // document.querySelector(".estadoF").innerHTML = `[${F.map(e => "q" + e.id).toString()
-    //     }]`
-    // if (S) {
-    //     document.querySelector(".estadoI").innerHTML = "q" + S.id
-    // } else {
-    //     document.querySelector(".estadoI").innerHTML = "no definido"
-    // }
+    document.querySelector(".estadoF").innerHTML = `[${F.map(e => "q" + e.id).toString()
+        }]`
+    if (S) {
+        document.querySelector(".estadoI").innerHTML = "q" + S.id
+    } else {
+        document.querySelector(".estadoI").innerHTML = "no definido"
+    }
 
 }
 function save() {
@@ -242,6 +286,7 @@ function save() {
     a.href = url;
     a.download = "grafo";
     a.click();
+    console.log(archivo)
     URL.revokeObjectURL(url);
 }
 /* mover funciones */
@@ -262,7 +307,7 @@ function seleccionar(e) {
       paint();
     }
 }
-  
+ 
 function ScanEstado(x, y) {
     return grupoEstados.find(e => {
       return distanceBetweenPoints({ x, y }, e)  <= 20 && e instanceof Estado;
@@ -336,11 +381,12 @@ class Salto {
     load(obj) {
         Object.assign(this, obj)
     }
-    paint() {
+    paint_normal() {
+        console.log(this.xf,this.yf,this.estadoF)
         const x = this.estadoI.x;
         const y = this.estadoI.y;
-        const xf = this.estadoF ? this.estadoF.x : x;
-        const yf = this.estadoF ? this.estadoF.y : y;
+        const xf = this.estadoF ? this.estadoF.x : this.xf;
+        const yf = this.estadoF ? this.estadoF.y : this.yf;
         const cx = (x + xf) / 2 + 1;
         const cy = (y + yf) / 2 + 1;
     
@@ -386,119 +432,122 @@ class Salto {
         const value = (this.value == "/l") ? "λ" : (this.value == "/e") ? "ϵ" : this.value;
         canvas.text(value, textX, textY, 12, this.select ? "blue" : "black");
     }
-
-
     //version con arcos 
-    // paint(){
-    //     let x=this.estadoI.x;
-    //     let y=this.estadoI.y;
-    //     if(this.estadoF!=undefined){
-    //         if(this.estadoF.id==this.estadoI.id){
-    //             this.xf=this.estadoF.x+2
-    //             this.yf=this.estadoF.y+2
-    //         }else{
-    //             this.xf=this.estadoF.x
-    //             this.yf=this.estadoF.y
-    //         }
+    paint_arc(){
+        let x=this.estadoI.x;
+        let y=this.estadoI.y;
+        if(this.estadoF!=undefined){
+            if(this.estadoF.id==this.estadoI.id){
+                this.xf=this.estadoF.x+2
+                this.yf=this.estadoF.y+2
+            }else{
+                this.xf=this.estadoF.x
+                this.yf=this.estadoF.y
+            }
             
-    //     }
-    //     let xf=this.xf;
-    //     let yf=this.yf;
-    //     if(this.estadoF == undefined || (this.cx== undefined || this.cy== undefined)){
-    //         this.cx=(x+(xf-x)/2)+1;
-    //         this.cy=(y+(yf-y)/2)+1;
-    //     }
+        }
+        let xf=this.xf;
+        let yf=this.yf;
+        if(this.estadoF == undefined || (this.cx== undefined || this.cy== undefined)){
+            this.cx=(x+(xf-x)/2)+1;
+            this.cy=(y+(yf-y)/2)+1;
+        }
            
         
         
-    //     let cx=this.cx;
-    //     let cy=this.cy;
+        let cx=this.cx;
+        let cy=this.cy;
 
         
-    //     let pintarArc=()=>{
+        let pintarArc=()=>{
 
-    //         canvas.circle(cx,cy,5,this.select?"blue":"black",true)
-    //         let resultadoE=solveEquations([
-    //                     [x,y,1],
-    //                     [xf,yf,1],
-    //                     [cx,cy,1]
-    //                     ],
-    //                     [-Math.pow(x,2)-Math.pow(y,2),
-    //                     -Math.pow(xf,2)-Math.pow(yf,2),
-    //                     -Math.pow(cx,2)-Math.pow(cy,2)])
+            canvas.circle(cx,cy,5,this.select?"blue":"black",true)
+            let resultadoE=solveEquations([
+                        [x,y,1],
+                        [xf,yf,1],
+                        [cx,cy,1]
+                        ],
+                        [-Math.pow(x,2)-Math.pow(y,2),
+                        -Math.pow(xf,2)-Math.pow(yf,2),
+                        -Math.pow(cx,2)-Math.pow(cy,2)])
 
-    //         let [c,d,e]=resultadoE
-    //         let h=-c/2
-    //         let k=-d/2
-    //         let r=Math.sqrt(-e+Math.pow(h,2)+Math.pow(k,2))
+            let [c,d,e]=resultadoE
+            let h=-c/2
+            let k=-d/2
+            let r=Math.sqrt(-e+Math.pow(h,2)+Math.pow(k,2))
             
             
-    //         let calcularAnguloCuadrante=(x,y)=>{
-    //             let a=Math.atan((y-k)/(x-h))
-    //             if((x<=h && y<=k) || (x<h&& y>=k)){
-    //                 a=Math.PI+a
-    //             }else if(y<k){
-    //                 a=2*Math.PI+a
-    //             }
-    //             return a
-    //         }
-    //         let a1=calcularAnguloCuadrante(x,y)
-    //         let a2=calcularAnguloCuadrante(xf,yf)
+            let calcularAnguloCuadrante=(x,y)=>{
+                let a=Math.atan((y-k)/(x-h))
+                if((x<=h && y<=k) || (x<h&& y>=k)){
+                    a=Math.PI+a
+                }else if(y<k){
+                    a=2*Math.PI+a
+                }
+                return a
+            }
+            let a1=calcularAnguloCuadrante(x,y)
+            let a2=calcularAnguloCuadrante(xf,yf)
 
-    //         let m= (y-yf)/(x-xf)
-    //         let fy= (cx-x)*m+y;
+            let m= (y-yf)/(x-xf)
+            let fy= (cx-x)*m+y;
 
 
-    //         let [p1,p2]=intersectionCircles(h,k,r,xf,yf,20)
-    //         let xi,yi
+            let [p1,p2]=intersectionCircles(h,k,r,xf,yf,20)
+            let xi,yi
 
-    //         if(x<xf){// 1 4
-    //             if(fy<cy){ //  4
-    //                 canvas.arc(h,k,r,a1,a2,this.select?"blue":"black");
-    //                 [xi,yi]=[p1.x,p1.y]
-    //             }else{ // 1
-    //                canvas.arc(h,k,r,a2,a1,this.select?"blue":"black");
-    //                [xi,yi]=[p2.x,p2.y]
-    //             }
-    //         }else{// 2 3
-    //             if(fy>cy){//2
-    //                 canvas.arc(h,k,r,a1,a2,this.select?"blue":"black");
-    //                 [xi,yi]=[p1.x,p1.y]
-    //             }else{//3
-    //                canvas.arc(h,k,r,a2,a1,this.select?"blue":"black");
-    //                [xi,yi]=[p2.x,p2.y]
-    //             }
+            if(x<xf){// 1 4
+                if(fy<cy){ //  4
+                    canvas.arc(h,k,r,a1,a2,this.select?"blue":"black");
+                    [xi,yi]=[p1.x,p1.y]
+                }else{ // 1
+                   canvas.arc(h,k,r,a2,a1,this.select?"blue":"black");
+                   [xi,yi]=[p2.x,p2.y]
+                }
+            }else{// 2 3
+                if(fy>cy){//2
+                    canvas.arc(h,k,r,a1,a2,this.select?"blue":"black");
+                    [xi,yi]=[p1.x,p1.y]
+                }else{//3
+                   canvas.arc(h,k,r,a2,a1,this.select?"blue":"black");
+                   [xi,yi]=[p2.x,p2.y]
+                }
                 
-    //         }
+            }
 
                 
-    //         let angf=Math.atan((yf-yi)/((xf-xi)+0.1))
-    //         if(xi>=xf){
-    //             xi=xi+9*Math.cos(angf)
-    //             yi=yi+9*Math.sin(angf)
-    //         }else{
-    //             xi=xi-9*Math.cos(angf)
-    //             yi=yi-9*Math.sin(angf)
-    //         }
-    //         canvas.polygon(xi,yi,3,10,(xf-xi>0)?toGrad(angf):toGrad(angf)+180,"",true)
+            let angf=Math.atan((yf-yi)/((xf-xi)+0.1))
+            if(xi>=xf){
+                xi=xi+9*Math.cos(angf)
+                yi=yi+9*Math.sin(angf)
+            }else{
+                xi=xi-9*Math.cos(angf)
+                yi=yi-9*Math.sin(angf)
+            }
+            canvas.polygon(xi,yi,3,10,(xf-xi>0)?toGrad(angf):toGrad(angf)+180,"",true)
 
-    //         if(!this.estadoF){
-    //             canvas.line(x,y,xf,yf,2,this.select?"blue":"black")
-    //         }
-    //         let aux=Math.atan(m)
-    //         if(aux>0.5)aux=-20
-    //         canvas.text(this.value=="/l"?"λ":this.value=="/e"?"ϵ":this.value,cx+10+aux,
-    //                 cy-10+aux,12,this.select?"blue":"black")
+            if(!this.estadoF){
+                canvas.line(x,y,xf,yf,2,this.select?"blue":"black")
+            }
+            let aux=Math.atan(m)
+            if(aux>0.5)aux=-20
+            canvas.text(this.value=="/l"?"λ":this.value=="/e"?"ϵ":this.value,cx+10+aux,
+                    cy-10+aux,12,this.select?"blue":"black")
 
 
             
-    //     }
+        }
       
-    // /**-------------------------------------------------- */
+    /**-------------------------------------------------- */
     
-    // pintarArc();
+    pintarArc();
 
-    // }
+    }
+    paint(){
+        this.paint_arc()
+        // this.paint_normal()
+    }
     
     
 }
+
