@@ -20,15 +20,15 @@ let initEvent = true //estado para saber si ya se presiono la tecla
 // eventos
 canvas.event("dblclick", createEstado)
 /* MOVER */
-canvas.event("mousedown", throttle(seleccionar, 100))
-canvas.event("mousemove", throttle(mover, 100)); // Limita el controlador 'mover' a ejecutarse como máximo cada 100ms
+canvas.event("mousedown", throttle(seleccionar, 500))
+canvas.event("mousemove", throttle(mover, 500)); // Limita el controlador 'mover' a ejecutarse como máximo cada 100ms
 canvas.event("mouseup", (e) => {
     if (!CTRL) SELECT_MOVE = null
     canvas_focus=true
     console.log(canvas_focus)
 })
 /* FIN MOVER */
-window.addEventListener("keydown", throttle(initSalto, 100))
+window.addEventListener("keydown", throttle(initSalto, 500))
 window.addEventListener("keyup",(e) => {
     if (SELECT) {
         CTRL = false
