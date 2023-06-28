@@ -39,7 +39,7 @@ function load(g){
                 }
             }
         })
-        createMatrizDelta()
+        //createMatrizDelta()
         paint()
 
 

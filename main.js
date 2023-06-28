@@ -1,10 +1,10 @@
 let canvas = new Canvas()
-canvas.size(700, 500)
+canvas.size(900, 800)
 // variables
 let S = null //Estado inicial definido
 let F = []
 let delta = []
-let delta_prima= []
+let delta_prima = []
 let valoresSaltos = []
 //--------------------------------
 let grupoEstados = []
@@ -15,21 +15,21 @@ let SELECT_MOVE = null
 let SELECT = null
 let CTRL = false
 let SALTO = null
-let canvas_focus=true
+let canvas_focus = true
 let initEvent = true //estado para saber si ya se presiono la tecla
 // eventos
 canvas.event("dblclick", createEstado)
 /* MOVER */
-canvas.event("mousedown", throttle(seleccionar, 500))
-canvas.event("mousemove", throttle(mover, 500)); // Limita el controlador 'mover' a ejecutarse como máximo cada 100ms
+canvas.event("mousedown", throttle(seleccionar, 50))
+canvas.event("mousemove", throttle(mover, 50)); // Limita el controlador 'mover' a ejecutarse como máximo cada 100ms
 canvas.event("mouseup", (e) => {
     if (!CTRL) SELECT_MOVE = null
-    canvas_focus=true
-    console.log(canvas_focus)
+    canvas_focus = true
+    // console.log(canvas_focus)
 })
 /* FIN MOVER */
-window.addEventListener("keydown", throttle(initSalto, 500))
-window.addEventListener("keyup",(e) => {
+window.addEventListener("keydown", throttle(initSalto, 50))
+window.addEventListener("keyup", (e) => {
     if (SELECT) {
         CTRL = false
         initEvent = true
@@ -47,11 +47,11 @@ window.addEventListener("keyup",(e) => {
         paint()
         try {
             canvas.removeEvent("mousemove", createSalto)
-        } catch (error) {}
+        } catch (error) { }
     }
 })
 // funciones
-function setFocus(){canvas_focus=false}
+function setFocus() { canvas_focus = false }
 function initSalto(e) {
 
     if ((e.key == "Control") && initEvent) {
@@ -94,14 +94,14 @@ function initSalto(e) {
             document.querySelector(".estadoF").innerHTML = `[${F.map(e => "q" + e.id).toString()
                 }]`
         }
-    } else if ( SELECT  && e.key == "Backspace" && canvas_focus) {
-        if(confirm("¿Desea eliminar este elemento?")){
-            if(SELECT instanceof Estado){
-                let po=grupoEstados.findIndex(e=>e.id==SELECT.id)
-                grupoEstados.splice(po,1)
-            }else if(SELECT instanceof Salto){
-                let po=grupoSaltos.findIndex(e=>e.id==SELECT.id)
-                grupoSaltos.splice(po,1)
+    } else if (SELECT && e.key == "Backspace" && canvas_focus) {
+        if (confirm("¿Desea eliminar este elemento?")) {
+            if (SELECT instanceof Estado) {
+                let po = grupoEstados.findIndex(e => e.id == SELECT.id)
+                grupoEstados.splice(po, 1)
+            } else if (SELECT instanceof Salto) {
+                let po = grupoSaltos.findIndex(e => e.id == SELECT.id)
+                grupoSaltos.splice(po, 1)
 
             }
 
@@ -110,14 +110,14 @@ function initSalto(e) {
     paint()
 }
 function createSalto(e) {
-    
+
     let { x, y } = canvas.getMousePosition(e)
     if (!SALTO) {
         if (SELECT instanceof Estado) {
-            SALTO = new Salto(SELECT,null, x, y, idSaltos, "");
+            SALTO = new Salto(SELECT, null, x, y, idSaltos, "");
         }
     } else {
-        console.log("salto")
+        // console.log("salto")
         SALTO.xf = x
         SALTO.yf = y
         paint()
@@ -143,17 +143,17 @@ async function resetSelect() {
     grupoEstados.forEach(e => e.select = false);
     paint()
 }
-function createMatrizDeltaPrima(){
-    let lambdas=delta.map(e=>{
+function createMatrizDeltaPrima() {
+    let lambdas = delta.map(e => {
         return {
-            estI:e.estadoI,
-            estadosF:[e.estadoI,(e.value=="/l")?e.estadoF:undefined].filter(Boolean)
+            estI: e.estadoI,
+            estadosF: [e.estadoI, (e.value == "/l") ? e.estadoF : undefined].filter(Boolean)
         }
     })
-    console.log(lambdas.map(l=>`λ(q${l.estI.id})={${l.estadosF.map(f=>`q${f.id}`)}}`))
-    lambdas.forEach(l=>{
-        let estado=delta.filter(d=>d.estadoI.id==l.estI.id)
-        console.log(estado)
+    // console.log(lambdas.map(l=>`λ(q${l.estI.id})={${l.estadosF.map(f=>`q${f.id}`)}}`))
+    lambdas.forEach(l => {
+        let estado = delta.filter(d => d.estadoI.id == l.estI.id)
+        // console.log(estado)
 
         // l.estadosF.forEach(e=>{
         //     let res_delta = delta.filter(d=>e.id==d.estadoI.id && d.value!= "/l")
@@ -164,11 +164,11 @@ function createMatrizDeltaPrima(){
         //             value:rd.value
         //         })
         //     })
-            
-            
+
+
         // })
     })
-    console.log(delta_prima.map(d=>`(q${d.estadoI},${d.value})=[${d.estadosF.map(f=>`q${f.estI.id}`)}]`))
+    // console.log(delta_prima.map(d=>`(q${d.estadoI},${d.value})=[${d.estadosF.map(f=>`q${f.estI.id}`)}]`))
 }
 function createMatrizDelta() {
     /// -------- limpia residuos -----
@@ -207,9 +207,9 @@ function createMatrizDelta() {
     //----- Extrae los valores de los saltos ---------
     valoresSaltos = []
     const uniqueValoresSaltos = new Set(valoresSaltos);
-    
+
     grupoSaltos.forEach(e => {
-      uniqueValoresSaltos.add(e.value);
+        uniqueValoresSaltos.add(e.value);
     });
 
     valoresSaltos = Array.from(uniqueValoresSaltos);
@@ -218,31 +218,31 @@ function createMatrizDelta() {
     delta = []
     grupoEstados.forEach(e => {
         const relevantJumps = grupoSaltos.filter(s => e.id === s.estadoI.id);
-        
-        relevantJumps.forEach(s => {
-          const relevantValue = valoresSaltos.find(v => v === s.value);
-          
-          if (relevantValue) {
-            delta.push({
-              estadoI: e,
-              estadoF: s.estadoF,
-              value: relevantValue
-            });
-          }
-        });
-      });
-      grupoEstados.forEach(e => {
-        let r=delta.find(d =>e.id==d.estadoI.id)
-          if (!r) {
-            delta.push({
-              estadoI: e,
-              estadoF: null,
-              value: null
-            });
-          }
-      });
 
-      
+        relevantJumps.forEach(s => {
+            const relevantValue = valoresSaltos.find(v => v === s.value);
+
+            if (relevantValue) {
+                delta.push({
+                    estadoI: e,
+                    estadoF: s.estadoF,
+                    value: relevantValue
+                });
+            }
+        });
+    });
+    grupoEstados.forEach(e => {
+        let r = delta.find(d => e.id == d.estadoI.id)
+        if (!r) {
+            delta.push({
+                estadoI: e,
+                estadoF: null,
+                value: null
+            });
+        }
+    });
+
+
     pintarMatriz()
 }
 function pintarMatriz() {
@@ -280,43 +280,45 @@ function paint() {
 
 }
 function save() {
+    delta = []
+    createMatrizDelta()
     const a = document.createElement("a");
     const archivo = new Blob([JSON.stringify(delta)], { type: 'application/json' });
     const url = URL.createObjectURL(archivo);
     a.href = url;
     a.download = "grafo";
     a.click();
-    console.log(archivo)
+    // console.log(archivo)
     URL.revokeObjectURL(url);
 }
 /* mover funciones */
 function seleccionar(e) {
     if (SELECT_MOVE || CTRL) {
-      return;
+        return;
     }
-  
+
     let { x, y } = canvas.getMousePosition(e);
     let estado = ScanEstado(x, y);
     let salto = ScanSalto(x, y);
-  
+
     if (estado || salto) {
-      SELECT_MOVE = estado || salto;
-      SELECT = estado || salto;
-      resetSelect();
-      SELECT_MOVE.select = true;
-      paint();
+        SELECT_MOVE = estado || salto;
+        SELECT = estado || salto;
+        resetSelect();
+        SELECT_MOVE.select = true;
+        paint();
     }
 }
- 
+
 function ScanEstado(x, y) {
     return grupoEstados.find(e => {
-      return distanceBetweenPoints({ x, y }, e)  <= 20 && e instanceof Estado;
+        return distanceBetweenPoints({ x, y }, e) <= 20 && e instanceof Estado;
     });
-  }
+}
 function ScanSalto(x, y) {
     return grupoSaltos.find(e => {
-        return distanceBetweenPoints({ x, y }, {x:e.cx,y:e.cy})  <= 5 && e instanceof Salto;
-      });
+        return distanceBetweenPoints({ x, y }, { x: e.cx, y: e.cy }) <= 5 && e instanceof Salto;
+    });
 }
 function mover(e) {
     if (SELECT_MOVE && !CTRL) {
@@ -327,8 +329,9 @@ function mover(e) {
         } else if (SELECT_MOVE instanceof Salto) {
             SELECT_MOVE.cx = x
             SELECT_MOVE.cy = y
+            
         }
-        paint()
+         paint()
     }
 }
 /* fin mover funciones*/
@@ -374,7 +377,7 @@ class Salto {
         this.xf = xf
         this.yf = yf
         this.id = id
-        this.visited=false
+        this.visited = false
         idSaltos++
 
     }
@@ -382,17 +385,17 @@ class Salto {
         Object.assign(this, obj)
     }
     paint_normal() {
-        console.log(this.xf,this.yf,this.estadoF)
+        // console.log(this.xf,this.yf,this.estadoF)
         const x = this.estadoI.x;
         const y = this.estadoI.y;
         const xf = this.estadoF ? this.estadoF.x : this.xf;
         const yf = this.estadoF ? this.estadoF.y : this.yf;
         const cx = (x + xf) / 2 + 1;
         const cy = (y + yf) / 2 + 1;
-    
+
         canvas.circle(cx, cy, 5, this.select ? "blue" : "black", true);
         canvas.line(x, y, xf, yf, 2, this.select ? "blue" : "black");
-    
+
         const [c, d, e] = solveEquations([
             [x, y, 1],
             [xf, yf, 1],
@@ -402,152 +405,154 @@ class Salto {
             -Math.pow(xf, 2) - Math.pow(yf, 2),
             -Math.pow(cx, 2) - Math.pow(cy, 2)
         ]);
-    
+
         const h = -c / 2;
         const k = -d / 2;
         const r = Math.sqrt(-e + Math.pow(h, 2) + Math.pow(k, 2));
-    
+
         const a1 = Math.atan2(y - k, x - h);
         const a2 = Math.atan2(yf - k, xf - h);
         const m = (y - yf) / (x - xf);
         const fy = (cx - x) * m + y;
         const [p1, p2] = intersectionCircles(h, k, r, xf, yf, 20);
         const [xi, yi] = (x < xf && fy < cy) || (x >= xf && fy >= cy) ? [p1.x, p1.y] : [p2.x, p2.y];
-    
+
         const angf = Math.atan((yf - yi) / (xf - xi + 0.1));
         const triangleSize = 10; // Tamaño del triángulo
-    
+
         const triangleX = xf - triangleSize * Math.cos(angf);
         const triangleY = yf - triangleSize * Math.sin(angf);
         const angleTriangle = Math.PI / 6; // Ángulo del triángulo (30 grados)
         const triangleX2 = triangleX + triangleSize * Math.cos(angf + angleTriangle);
         const triangleY2 = triangleY + triangleSize * Math.sin(angf + angleTriangle);
-    
+
         canvas.polygon(xi, yi, 3, 10, triangleX2, triangleY2, true);
-    
+
         const angleOffset = (xf - x >= 0) ? 0 : Math.PI;
         const textX = cx + 10 + 9 * Math.cos(angf + angleOffset);
         const textY = cy - 10 + 9 * Math.sin(angf + angleOffset);
-    
+
         const value = (this.value == "/l") ? "λ" : (this.value == "/e") ? "ϵ" : this.value;
         canvas.text(value, textX, textY, 12, this.select ? "blue" : "black");
     }
     //version con arcos 
-    paint_arc(){
-        let x=this.estadoI.x;
-        let y=this.estadoI.y;
-        if(this.estadoF!=undefined){
-            if(this.estadoF.id==this.estadoI.id){
-                this.xf=this.estadoF.x+2
-                this.yf=this.estadoF.y+2
-            }else{
-                this.xf=this.estadoF.x
-                this.yf=this.estadoF.y
+    paint_arc() {
+        let x = this.estadoI.x;
+        let y = this.estadoI.y;
+        if (this.estadoF != undefined) {
+            if (this.estadoF.id == this.estadoI.id) {
+                this.xf = this.estadoF.x + 2
+                this.yf = this.estadoF.y + 2
+            } else {
+                this.xf = this.estadoF.x
+                this.yf = this.estadoF.y
             }
-            
+
         }
-        let xf=this.xf;
-        let yf=this.yf;
-        if(this.estadoF == undefined || (this.cx== undefined || this.cy== undefined)){
-            this.cx=(x+(xf-x)/2)+1;
-            this.cy=(y+(yf-y)/2)+1;
+        let xf = this.xf;
+        let yf = this.yf;
+        if (this.estadoF == undefined || (this.cx == undefined || this.cy == undefined)) {
+            this.cx = (x + (xf - x) / 2) + 1;
+            this.cy = (y + (yf - y) / 2) + 1;
         }
-           
-        
-        
-        let cx=this.cx;
-        let cy=this.cy;
 
-        
-        let pintarArc=()=>{
 
-            canvas.circle(cx,cy,5,this.select?"blue":"black",true)
-            let resultadoE=solveEquations([
-                        [x,y,1],
-                        [xf,yf,1],
-                        [cx,cy,1]
-                        ],
-                        [-Math.pow(x,2)-Math.pow(y,2),
-                        -Math.pow(xf,2)-Math.pow(yf,2),
-                        -Math.pow(cx,2)-Math.pow(cy,2)])
 
-            let [c,d,e]=resultadoE
-            let h=-c/2
-            let k=-d/2
-            let r=Math.sqrt(-e+Math.pow(h,2)+Math.pow(k,2))
-            
-            
-            let calcularAnguloCuadrante=(x,y)=>{
-                let a=Math.atan((y-k)/(x-h))
-                if((x<=h && y<=k) || (x<h&& y>=k)){
-                    a=Math.PI+a
-                }else if(y<k){
-                    a=2*Math.PI+a
+        let cx = this.cx;
+        let cy = this.cy;
+
+
+        let pintarArc = () => {
+
+            canvas.circle(cx, cy, 5, this.select ? "blue" : "black", true)
+            let resultadoE = solveEquations([
+                [x, y, 1],
+                [xf, yf, 1],
+                [cx, cy, 1]
+            ],
+                [-Math.pow(x, 2) - Math.pow(y, 2),
+                -Math.pow(xf, 2) - Math.pow(yf, 2),
+                -Math.pow(cx, 2) - Math.pow(cy, 2)])
+
+            let [c, d, e] = resultadoE
+            let h = -c / 2
+            let k = -d / 2
+            let r = Math.sqrt(-e + Math.pow(h, 2) + Math.pow(k, 2))
+
+
+            let calcularAnguloCuadrante = (x, y) => {
+                let a = Math.atan((y - k) / (x - h))
+                if ((x <= h && y <= k) || (x < h && y >= k)) {
+                    a = Math.PI + a
+                } else if (y < k) {
+                    a = 2 * Math.PI + a
                 }
                 return a
             }
-            let a1=calcularAnguloCuadrante(x,y)
-            let a2=calcularAnguloCuadrante(xf,yf)
+            let a1 = calcularAnguloCuadrante(x, y)
+            let a2 = calcularAnguloCuadrante(xf, yf)
 
-            let m= (y-yf)/(x-xf)
-            let fy= (cx-x)*m+y;
+            let m = (y - yf) / (x - xf)
+            let fy = (cx - x) * m + y;
 
 
-            let [p1,p2]=intersectionCircles(h,k,r,xf,yf,20)
-            let xi,yi
+            let [p1, p2] = intersectionCircles(h, k, r, xf, yf, 20)
+            let xi, yi
 
-            if(x<xf){// 1 4
-                if(fy<cy){ //  4
-                    canvas.arc(h,k,r,a1,a2,this.select?"blue":"black");
-                    [xi,yi]=[p1.x,p1.y]
-                }else{ // 1
-                   canvas.arc(h,k,r,a2,a1,this.select?"blue":"black");
-                   [xi,yi]=[p2.x,p2.y]
+            if (x < xf) {// 1 4
+                if (fy < cy) { //  4
+                    canvas.arc(h, k, r, a1, a2, this.select ? "blue" : "black");
+                    [xi, yi] = [p1.x, p1.y]
+                } else { // 1
+                    canvas.arc(h, k, r, a2, a1, this.select ? "blue" : "black");
+                    [xi, yi] = [p2.x, p2.y]
                 }
-            }else{// 2 3
-                if(fy>cy){//2
-                    canvas.arc(h,k,r,a1,a2,this.select?"blue":"black");
-                    [xi,yi]=[p1.x,p1.y]
-                }else{//3
-                   canvas.arc(h,k,r,a2,a1,this.select?"blue":"black");
-                   [xi,yi]=[p2.x,p2.y]
+            } else {// 2 3
+                if (fy > cy) {//2
+                    canvas.arc(h, k, r, a1, a2, this.select ? "blue" : "black");
+                    [xi, yi] = [p1.x, p1.y]
+                } else {//3
+                    canvas.arc(h, k, r, a2, a1, this.select ? "blue" : "black");
+                    [xi, yi] = [p2.x, p2.y]
                 }
-                
+
             }
 
-                
-            let angf=Math.atan((yf-yi)/((xf-xi)+0.1))
-            if(xi>=xf){
-                xi=xi+9*Math.cos(angf)
-                yi=yi+9*Math.sin(angf)
-            }else{
-                xi=xi-9*Math.cos(angf)
-                yi=yi-9*Math.sin(angf)
-            }
-            canvas.polygon(xi,yi,3,10,(xf-xi>0)?toGrad(angf):toGrad(angf)+180,"",true)
 
-            if(!this.estadoF){
-                canvas.line(x,y,xf,yf,2,this.select?"blue":"black")
+            let angf = Math.atan((yf - yi) / ((xf - xi) + 0.1))
+            if (xi >= xf) {
+                xi = xi + 9 * Math.cos(angf)
+                yi = yi + 9 * Math.sin(angf)
+            } else {
+                xi = xi - 9 * Math.cos(angf)
+                yi = yi - 9 * Math.sin(angf)
             }
-            let aux=Math.atan(m)
-            if(aux>0.5)aux=-20
-            canvas.text(this.value=="/l"?"λ":this.value=="/e"?"ϵ":this.value,cx+10+aux,
-                    cy-10+aux,12,this.select?"blue":"black")
+            canvas.polygon(xi, yi, 3, 10, (xf - xi > 0) ? toGrad(angf) : toGrad(angf) + 180, "", true)
 
+            if (!this.estadoF) {
+                canvas.line(x, y, xf, yf, 2, this.select ? "blue" : "black")
+            }
+            let aux = Math.atan(m)
+            if (aux > 0.5) aux = -20
+            canvas.text(this.value == "/l" ? "λ" : this.value == "/e" ? "ϵ" : this.value, cx + 10 + aux,
+                cy - 10 + aux, 12, this.select ? "blue" : "black")
 
             
+
         }
-      
-    /**-------------------------------------------------- */
-    
-    pintarArc();
+
+        /**-------------------------------------------------- */
+
+        pintarArc();
 
     }
-    paint(){
+    paint() {
         this.paint_arc()
-        // this.paint_normal()
+        //  this.paint_normal()
     }
-    
-    
+
+
 }
+
+
 
