@@ -1,3 +1,4 @@
+
 let canvas = new Canvas()
 canvas.size(900, 800)
 // variables

@@ -1,3 +1,4 @@
+
 let regexInput = $("#regex")
 
 function separarNum(exp) {
